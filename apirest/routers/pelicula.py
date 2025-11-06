@@ -1,10 +1,10 @@
 #fastapi dev pelicula.py
 
 
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-app = FastAPI()
+router = APIRouter(prefix="/peliculas",tags=["peliculas"])
 
 # Modelo pelicula
 class Pelicula(BaseModel):
@@ -23,12 +23,12 @@ pelicula_list = [
 ]
 
 # Endpoint para obtener la lista de peliculas
-@app.get("/peliculas")
+@router.get("/")
 def peliculas():
     return pelicula_list
 
 # Endpoint para obtener un pelicula por su ID         
-@app.get("/pelicula/{id}")
+@router.get("/{id}")
 def get_pelicula(id:int): 
     pelicula = [pelicula for pelicula in pelicula_list if pelicula.id == id]
 
@@ -37,14 +37,14 @@ def get_pelicula(id:int):
     
     raise HTTPException(status_code=404, detail="User not found")
 
-@app.post("/peliculas", status_code=201, response_model=Pelicula)
+@router.post("/", status_code=201, response_model=Pelicula)
 def add_pelicula(pelicula: Pelicula):
     pelicula.id = next_id()
     pelicula_list.append(pelicula)
     return pelicula
 
 # Se le pasa un id y un objeto json ya modificado, si existe un objeto con su id se le asigna los nuevos valores
-@app.put("/peliculas/{id}", response_model=Pelicula)
+@router.put("/{id}", response_model=Pelicula)
 def modify_peliculas(id : int, pelicula: Pelicula):
     for index, saved_pelicula in enumerate(pelicula_list):
         if saved_pelicula.id == id:
@@ -53,7 +53,7 @@ def modify_peliculas(id : int, pelicula: Pelicula):
             return pelicula
     raise HTTPException(status_code=404, detail="User not found")
 
-@app.delete("/peliculas/{id}")
+@router.delete("/{id}")
 def delete_user(id: int):
     for saved_pelicula in pelicula_list:
         if saved_pelicula.id == id:

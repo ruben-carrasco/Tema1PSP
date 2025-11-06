@@ -1,10 +1,10 @@
 #fastapi dev director.py
 
 
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-app = FastAPI()
+router = APIRouter(prefix="/directores", tags=["directores"])
 
 
 # Definición del modelo Director
@@ -22,12 +22,12 @@ director_list = [Director(id=1,name = "Paco", surname="Pérez", nacionalidad="Es
                 ]
 
 # Endpoint para obtener la lista de directores
-@app.get("/directores")
+@router.get("/")
 def directores():
     return director_list
 
 # Endpoint para obtener un director por su ID         
-@app.get("/director/{id_director}")
+@router.get("/{id_director}")
 def get_director(id_director:int): 
     director = [director for director in director_list if director.id == id_director]
 
@@ -36,14 +36,14 @@ def get_director(id_director:int):
     
     raise HTTPException(status_code=404, detail="User not found")
 
-@app.post("/directores", status_code=201, response_model=Director)
+@router.post("/", status_code=201, response_model=Director)
 def add_director(director: Director):
     director.id = next_id()
     director_list.append(director)
     return director
 
 # Se le pasa un id y un objeto json ya modificado, si existe un objeto con su id se le asigna los nuevos valores
-@app.put("/directores/{id}", response_model=Director)
+@router.put("/{id}", response_model=Director)
 def modify_directores(id : int, director: Director):
     for index, saved_director in enumerate(director_list):
         if saved_director.id == id:
@@ -52,7 +52,7 @@ def modify_directores(id : int, director: Director):
             return director
     raise HTTPException(status_code=404, detail="User not found")
 
-@app.delete("/directores/{id}")
+@router.delete("/{id}")
 def delete_user(id: int):
     for saved_director in director_list:
         if saved_director.id == id:
