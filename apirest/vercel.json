@@ -3,14 +3,14 @@
   "name": "mi-api",
     "builds": [
     {
-        "src": "apirest/main.py",
+        "src": "proyecto/apirest/main.py",
         "use": "@vercel/python"
     }
     ],
     "routes": [
         {
             "src": "/(.*)",
-            "dest": "apirest/main.py"
+            "dest": "proyecto/apirest/main.py"
         }
     ]
 }
