@@ -1,8 +1,10 @@
 #fastapi dev director.py
 
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+
+from apirest.routers.auth_director import authetication
 
 router = APIRouter(prefix="/directores", tags=["directores"])
 
@@ -37,7 +39,7 @@ def get_director(id_director:int):
     raise HTTPException(status_code=404, detail="User not found")
 
 @router.post("/", status_code=201, response_model=Director)
-def add_director(director: Director):
+def add_director(director: Director, authorized = Depends(authetication)):
     director.id = next_id()
     director_list.append(director)
     return director

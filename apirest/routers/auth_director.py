@@ -1,5 +1,7 @@
+
+from datetime import *
 from pydantic import BaseModel
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 import jwt
@@ -40,12 +42,19 @@ users_db = {
         "disabled" : False,
         "password" : "123456"
     },
-    "rubencf4" : {
-        "username": "rubencf4",
+    "rubencf54" : {
+        "username": "rubencf54",
         "fullname": "Ruben Carrasco",
         "email": "rubencarrasco@gmail.com",
         "disabled": False,
-        "password": "$argon2id$v=19$m=65536,t=3,p=4$Lw2DEnh8Ynf16dpd3t4H1w$z1Df3PBP9gSRSiP/1TAi/xTqHl0hbO65Zy/DpmdUDd4"
+        "password": "$argon2id$v=19$m=65536,t=3,p=4$Y0xncH49umIh/s0pXBfivg$9u6eocNsF2RQknNpnSWqZmTYtRBYbhtfyhd5oidRzo4"
+    },
+        "rubencf12345" : {
+        "username": "rubencf12345",
+        "fullname": "Ruben Carrasco",
+        "email": "rubencarrasco@gmail.com",
+        "disabled":  False,
+        "password": "$argon2id$v=19$m=65536,t=3,p=4$GNvZtBgdhrCyWHHK5jbwWw$PZGwrEEAvk5kAvhK5cMmmewc82XgELSD0Q1rLXarm8U"
     }
 }
 
@@ -58,3 +67,35 @@ def add_user(user: DirectorBD):
         return user
     else:
         raise HTTPException(status_code=409, detail="User already exists")
+    
+    
+@router.post("/login", status_code=201)
+async def login(form : OAuth2PasswordRequestForm = Depends()):
+    user_db = users_db.get(form.username)
+    #Si el usuario existe en el diccionario
+    if user_db:
+        # lo asignamos a un usuario para trabajar con el
+        user = DirectorBD(**user_db)
+        try:
+            #Verificamos la contraseña y si es correcta generamos el token
+            if password_hash.verify(form.password, user.password):
+                # Hora actual + tiempo de expiracion
+                expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+                # Parametros del token: 
+                access_token = {"sub" : user.username, "exp":expire}
+                # Generamos el token
+                token = jwt.encode(access_token, SECRET_KEY, algorithm=ALGORITHM)
+                return {"access_token":token, "token_type":"bearer"}
+        except:
+                raise HTTPException(status_code=400, detail="Error de autenticación")
+        
+    raise HTTPException(status_code=401, detail="Usuario o contraseña incorrectos")
+
+async def authetication(token: str = Depends(oauth2)):
+    # Obtenemos el usuario desde el token
+    try:
+        username = jwt.decode(token, SECRET_KEY, algorithm=ALGORITHM).get("sub")
+        if username is None:
+            raise HTTPException(status_code=401, detail="Credenciales de autenticación inválidas", headers={"WWWW-Authenticate" : "Bearer"})
+    except PyJWTError:
+        raise HTTPException(status_code=401, detail="Credenciales de autenticación inválidas", headers={"WWWW-Authenticate" : "Bearer"})
