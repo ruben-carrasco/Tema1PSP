@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from .routers import director, pelicula, auth_director, director_db, pelicula_db
+from routers import director, pelicula, auth_director, director_db, pelicula_db
 from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
