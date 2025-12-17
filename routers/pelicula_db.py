@@ -17,7 +17,7 @@ router = APIRouter(prefix="/peliculasdb", tags=["peliculasdb"])
 def search_pelicula_id(id: str):
     try:
         # Busca en la colección 'peliculas'
-        pelicula = pelicula_schema(db_client.local.peliculas.find_one({"_id" : ObjectId(id)}))
+        pelicula = pelicula_schema(db_client.sample_mflix.peliculas.find_one({"_id" : ObjectId(id)}))
         
         #Devolvemos el objeto convertido a Pelicula
         return Pelicula(**pelicula) # los dos asteriscos desempaquetan el diccionario en un objeto Pelicula
@@ -31,7 +31,7 @@ def search_pelicula_titulo(titulo: str):
         # Si algo va mal en la búsqueda dentro de la base de datos se lanzará una excepción,
         # así que la controlamos
         # Se busca en la colección 'peliculas'
-        pelicula = pelicula_schema(db_client.local.peliculas.find_one({"titulo": titulo}))
+        pelicula = pelicula_schema(db_client.sample_mflix.peliculas.find_one({"titulo": titulo}))
         
         # Retorna un objeto Pelicula (asumiendo que 'Pelicula' es el modelo Pydantic)
         return Pelicula(**pelicula)
@@ -46,7 +46,7 @@ def search_pelicula_titulo(titulo: str):
 @router.get("/", response_model=list[Pelicula])
 #El metodo find devuelve los registros de la base de datos, que convertidos a lista de diccionarios JSON
 def peliculas():
-    return peliculas_schema(db_client.local.peliculas.find())
+    return peliculas_schema(db_client.sample_mflix.peliculas.find())
 
 # Endpoint para obtener una pelicula por su ID (path parameter)         
 @router.get("/{id_pelicula}", response_model=Pelicula)
@@ -78,7 +78,7 @@ async def add_pelicula(pelicula: Pelicula):
     del pelicula_dict["id"]
 
     # Añadimos la pelicula a nuestra base de datos (colección 'peliculas')
-    id = db_client.local.peliculas.insert_one(pelicula_dict).inserted_id
+    id = db_client.sample_mflix.peliculas.insert_one(pelicula_dict).inserted_id
 
     # Añadimos el campo id a nuestro diccionario
     pelicula_dict["id"] = str(id)
@@ -98,7 +98,7 @@ async def modify_peliculas(id : str, pelicula: Pelicula):
     
     try:
         #buscamos por id y reemplazamos con el nuevo objeto diccionario
-        db_client.local.peliculas.find_one_and_replace({"_id" : ObjectId(id)}, pelicula_dict)
+        db_client.sample_mflix.peliculas.find_one_and_replace({"_id" : ObjectId(id)}, pelicula_dict)
         
         # devolvemos el objeto para saber que se modifico
         return search_pelicula_id(id)
@@ -108,7 +108,7 @@ async def modify_peliculas(id : str, pelicula: Pelicula):
 @router.delete("/{id}", response_model=Pelicula)
 async def delete_pelicula(id: str):
     #buscamos y borramos la pelicula
-    pelicula = db_client.local.peliculas.find_one_and_delete({"_id" : ObjectId(id)})
+    pelicula = db_client.sample_mflix.peliculas.find_one_and_delete({"_id" : ObjectId(id)})
     
     if not pelicula:
       raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pelicula no encontrada")
